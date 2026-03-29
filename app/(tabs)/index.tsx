@@ -123,7 +123,7 @@ export default function HomeScreen() {
             <ProductCard product={item} variant="featured" />
           )}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={{ paddingHorizontal: 15 }}
+          contentContainerStyle={{ paddingHorizontal: 24 }}
         />
 
         <View style={styles.sectionHeader}>
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    marginHorizontal: 15,
+    marginHorizontal: 24,
     marginVertical: 10,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     marginTop: 20,
     marginBottom: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   sectionTitle: {
     fontSize: 20,
@@ -264,12 +264,12 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   gridContainer: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 18,
     minHeight: 400,
     paddingBottom: 40,
   },
   categoryNavigator: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 24,
   },
   breadcrumbContainer: {
     flexDirection: 'row',

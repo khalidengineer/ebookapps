@@ -163,7 +163,8 @@ const styles = StyleSheet.create({
     height: 400,
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 30,
     backgroundColor: '#fff',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
@@ -177,8 +178,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   category: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 13,
+    color: '#007AFF',
     textTransform: 'uppercase',
     fontWeight: '700',
     marginBottom: 5,
@@ -233,7 +234,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 15,
     paddingBottom: 35,
     borderTopWidth: 1,
     borderColor: '#eee',
