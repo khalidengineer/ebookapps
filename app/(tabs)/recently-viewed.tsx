@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { History, ChevronRight, Trash2, Calendar, Clock } from 'lucide-react-native';
 import { getRecentlyViewed, clearRecentlyViewed } from '../../src/services/storage';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -15,9 +15,11 @@ export default function RecentlyViewedScreen() {
     setRecentProducts(data);
   };
 
-  useEffect(() => {
-    loadRecent();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadRecent();
+    }, [])
+  );
 
   const handleClearHistory = async () => {
     await clearRecentlyViewed();
@@ -49,24 +51,42 @@ export default function RecentlyViewedScreen() {
 
   return (
     <View style={styles.container}>
-      <Animated.View entering={FadeInDown.duration(800).springify()} style={styles.filterRow}>
+      <Animated.View entering={FadeInDown.duration(800).springify()} style={styles.headerRow}>
+        <View style={styles.filterRow}>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'all' && styles.activeFilter]} 
+            onPress={() => setFilter('all')}
+          >
+            <Text style={[styles.filterText, filter === 'all' && styles.activeText]}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'today' && styles.activeFilter]} 
+            onPress={() => setFilter('today')}
+          >
+            <Text style={[styles.filterText, filter === 'today' && styles.activeText]}>Today</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'week' && styles.activeFilter]} 
+            onPress={() => setFilter('week')}
+          >
+            <Text style={[styles.filterText, filter === 'week' && styles.activeText]}>7 Days</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity 
-          style={[styles.filterButton, filter === 'all' && styles.activeFilter]} 
-          onPress={() => setFilter('all')}
+          style={styles.resetButton} 
+          onPress={() => {
+            Alert.alert(
+              'Clear History',
+              'Are you sure you want to delete all browsing history?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Clear All', style: 'destructive', onPress: handleClearHistory }
+              ]
+            );
+          }}
         >
-          <Text style={[styles.filterText, filter === 'all' && styles.activeText]}>Reset</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.filterButton, filter === 'today' && styles.activeFilter]} 
-          onPress={() => setFilter('today')}
-        >
-          <Text style={[styles.filterText, filter === 'today' && styles.activeText]}>Today</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.filterButton, filter === 'week' && styles.activeFilter]} 
-          onPress={() => setFilter('week')}
-        >
-          <Text style={[styles.filterText, filter === 'week' && styles.activeText]}>Last 7 Day</Text>
+          <Trash2 size={20} color="#FF3B30" />
         </TouchableOpacity>
       </Animated.View>
 
@@ -126,33 +146,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 24,
-    paddingTop: 0, // Header text is removed, we'll use consistent padding
+    paddingTop: 28, 
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 20,
+    gap: 12,
   },
   filterRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 20,
-    gap: 10,
+    flex: 1,
+    gap: 8,
   },
   filterButton: {
-    flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+    borderRadius: 14,
+    backgroundColor: '#F7F7F7',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#F0F0F0',
+    flex: 1,
+  },
+  resetButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#FFF0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
   },
   activeFilter: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
   filterText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#666',
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#999',
+    textTransform: 'uppercase',
   },
   activeText: {
     color: '#fff',

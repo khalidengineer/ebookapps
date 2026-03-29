@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { HardDriveDownload, Trash2, Eye, FileText } from 'lucide-react-native';
 import { getSavedPDFs, deleteSavedPDF } from '../../src/services/storage';
 
@@ -13,9 +13,11 @@ export default function SavedScreen() {
     setSavedPDFs(data);
   };
 
-  useEffect(() => {
-    loadSaved();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadSaved();
+    }, [])
+  );
 
   const handleDelete = (id: number, uri: string) => {
     Alert.alert(
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 34,
   },
   header: {
     fontSize: 24,

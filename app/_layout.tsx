@@ -11,6 +11,7 @@ import { isOnboardingCompleted } from '../src/services/storage';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  usePreventScreenCapture();
   const [loaded] = [true]; // Set to true since we're using system fonts for now
   const [appIsReady, setAppIsReady] = useState(false);
   const router = useRouter();
