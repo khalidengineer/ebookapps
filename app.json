@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Ebook Store",
+    "slug": "ebook-store",
+    "version": "1.0.0",
+    "scheme": "ebook-store",
+    "orientation": "portrait",
+    "icon": "https://static.vecteezy.com/system/resources/thumbnails/021/778/345/small/picture-icon-in-gradient-colors-gallery-symbol-illustration-png.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "https://static.vecteezy.com/system/resources/thumbnails/021/778/345/small/picture-icon-in-gradient-colors-gallery-symbol-illustration-png.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "https://static.vecteezy.com/system/resources/thumbnails/021/778/345/small/picture-icon-in-gradient-colors-gallery-symbol-illustration-png.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.khalid.ebookstore"
+    },
+    "web": {
+      "favicon": "https://static.vecteezy.com/system/resources/thumbnails/021/778/345/small/picture-icon-in-gradient-colors-gallery-symbol-illustration-png.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-updates"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
