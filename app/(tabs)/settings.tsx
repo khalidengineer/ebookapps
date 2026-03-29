@@ -1,18 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Linking } from 'react-native';
-import { Info, Shield, HelpCircle, Star, Share2, Github, ExternalLink } from 'lucide-react-native';
+import { Info, Shield, HelpCircle, Star, Share2, Github, ChevronRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const version = Constants.expoConfig?.version || '1.0.0';
 
   const sections = [
     {
       title: 'App Info',
       items: [
-        { icon: Info, label: 'Version', value: version, type: 'text' },
+        { icon: Info, label: 'About App', type: 'nav', route: '/about' },
         { icon: Star, label: 'Rate our App', type: 'link', url: '#' },
         { icon: Share2, label: 'Share with friends', type: 'link', url: '#' },
+        { icon: Info, label: 'Version', value: version, type: 'text' },
       ]
     },
     {
@@ -20,7 +23,7 @@ export default function SettingsScreen() {
       items: [
         { icon: Shield, label: 'Privacy Policy', type: 'link', url: 'https://example.com/privacy' },
         { icon: HelpCircle, label: 'Help & FAQ', type: 'link', url: 'https://example.com/faq' },
-        { icon: ExternalLink, label: 'Visit Website', type: 'link', url: 'https://example.com' },
+        { icon: ChevronRight, label: 'Visit Website', type: 'link', url: 'https://example.com' },
       ]
     }
   ];
@@ -37,7 +40,10 @@ export default function SettingsScreen() {
               <TouchableOpacity 
                 key={itemIdx} 
                 style={[styles.item, itemIdx === section.items.length - 1 && styles.lastItem]}
-                onPress={() => item.type === 'link' && Linking.openURL(item.url)}
+                onPress={() => {
+                  if (item.type === 'link' && item.url) Linking.openURL(item.url);
+                  if (item.type === 'nav' && item.route) router.push(item.route as any);
+                }}
                 disabled={item.type === 'text'}
               >
                 <item.icon color="#666" size={20} style={{ marginRight: 15 }} />
@@ -45,7 +51,7 @@ export default function SettingsScreen() {
                 {item.value ? (
                   <Text style={styles.value}>{item.value}</Text>
                 ) : (
-                  <ExternalLink color="#ccc" size={16} />
+                  <ChevronRight color="#ccc" size={16} />
                 )}
               </TouchableOpacity>
             ))}

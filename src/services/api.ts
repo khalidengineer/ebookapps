@@ -3,6 +3,9 @@ import axios from 'axios';
 const SHEET_ID = '1P6aL26noUdb9G_we8vvcOXpulTlVZKMIpXMi8-hOo6c';
 const BASE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
+// Replace this with your Google Apps Script Web App URL
+const SUPPORT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw61yuGlpjvo83bdMkxL3VYX5CIGuDi89tj6YblDNIZigX0Vn8G7584YLLwPzQ0vrZx/exec';
+
 export interface Product {
   id: number;
   product_name: string;
@@ -96,5 +99,26 @@ export const fetchConfig = async (): Promise<Config> => {
   } catch (error) {
     console.error('Error fetching config:', error);
     return {};
+  }
+};
+
+export const submitContactForm = async (data: any): Promise<boolean> => {
+  try {
+    // If you haven't set up the URL yet, it will fail, so we'll log it
+    if (SUPPORT_WEBAPP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+      console.warn('SUPPORT_WEBAPP_URL is not configured. Form submission will not work.');
+      return false;
+    }
+
+    const response = await axios.post(SUPPORT_WEBAPP_URL, data, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.status === 200 || (response.data && response.data.status === 'success');
+  } catch (error) {
+    console.error('Error submitting contact form:', error);
+    return false;
   }
 };
