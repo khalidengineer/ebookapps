@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { fetchProducts, Product } from '../../src/services/api';
-import { LayoutGrid, ChevronRight } from 'lucide-react-native';
+import CategoryFolder from '../../src/components/CategoryFolder';
+import { LayoutGrid } from 'lucide-react-native';
 
 export default function CategoriesScreen() {
   const [categories, setCategories] = useState<string[]>([]);
@@ -19,7 +20,7 @@ export default function CategoriesScreen() {
 
   const handleCategoryPress = (category: string) => {
     router.push({
-      pathname: '/(tabs)',
+      pathname: '/(tabs)/',
       params: { category }
     });
   };
@@ -30,18 +31,14 @@ export default function CategoriesScreen() {
       <FlatList
         data={categories}
         keyExtractor={(item) => item}
+        numColumns={3}
+        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.categoryInfo} 
-            onPress={() => handleCategoryPress(item)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.iconContainer}>
-              <LayoutGrid color="#007AFF" size={24} />
-            </View>
-            <Text style={styles.categoryName}>{item}</Text>
-            <ChevronRight color="#ccc" size={20} />
-          </TouchableOpacity>
+          <CategoryFolder 
+            title={item} 
+            onPress={() => handleCategoryPress(item)} 
+          />
         )}
       />
     </View>
@@ -52,36 +49,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 20,
+    padding: 15,
     paddingTop: 24,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#333',
-    marginBottom: 20,
+  listContent: {
+    paddingBottom: 20,
   },
-  categoryInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 12,
-  },
-  iconContainer: {
-    width: 45,
-    height: 45,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  categoryName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
+  columnWrapper: {
+    justifyContent: 'flex-start',
   },
 });
