@@ -13,7 +13,7 @@ const slides = [
     subtitle: 'Unleash your potential with our curated materials.',
     description: 'Explore a wide range of academic notes and guides.',
   },
-  {
+  { 
     id: '2',
     title: 'Your Personal Companion',
     subtitle: 'Carry your books wherever you go.',
