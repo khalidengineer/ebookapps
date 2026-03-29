@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { History, ChevronRight } from 'lucide-react-native';
-import { getRecentlyViewed } from '../../src/services/storage';
+import { History, ChevronRight, Trash2, Calendar, Clock } from 'lucide-react-native';
+import { getRecentlyViewed, clearRecentlyViewed } from '../../src/services/storage';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 export default function RecentlyViewedScreen() {
   const [recentProducts, setRecentProducts] = useState<any[]>([]);
+  const [filter, setFilter] = useState<'all' | 'today' | 'week'>('all');
   const router = useRouter();
 
   const loadRecent = async () => {
@@ -16,6 +18,25 @@ export default function RecentlyViewedScreen() {
   useEffect(() => {
     loadRecent();
   }, []);
+
+  const handleClearHistory = async () => {
+    await clearRecentlyViewed();
+    setRecentProducts([]);
+  };
+
+  const filteredProducts = recentProducts.filter(p => {
+    if (filter === 'all') return true;
+    if (!p.viewedAt) return false; // Handle legacy items without timestamp
+    
+    const viewedDate = new Date(p.viewedAt).getTime();
+    const now = new Date().getTime();
+    const diffHours = (now - viewedDate) / (1000 * 60 * 60);
+    const diffDays = diffHours / 24;
+
+    if (filter === 'today') return diffHours <= 24;
+    if (filter === 'week') return diffDays <= 7;
+    return true;
+  });
 
   if (recentProducts.length === 0) {
     return (
@@ -28,23 +49,73 @@ export default function RecentlyViewedScreen() {
 
   return (
     <View style={styles.container}>
+      <Animated.View entering={FadeInDown.duration(800).springify()} style={styles.filterRow}>
+        <TouchableOpacity 
+          style={[styles.filterButton, filter === 'all' && styles.activeFilter]} 
+          onPress={() => setFilter('all')}
+        >
+          <Text style={[styles.filterText, filter === 'all' && styles.activeText]}>Reset</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.filterButton, filter === 'today' && styles.activeFilter]} 
+          onPress={() => setFilter('today')}
+        >
+          <Text style={[styles.filterText, filter === 'today' && styles.activeText]}>Today</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.filterButton, filter === 'week' && styles.activeFilter]} 
+          onPress={() => setFilter('week')}
+        >
+          <Text style={[styles.filterText, filter === 'week' && styles.activeText]}>Last 7 Day</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
       <FlatList
-        data={recentProducts}
+        data={filteredProducts}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.card} 
-            onPress={() => router.push(`/product/${item.id}`)}
-          >
-            <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} />
-            <View style={styles.content}>
-              <Text style={styles.title} numberOfLines={1}>{item.product_name}</Text>
-              <Text style={styles.category}>{item.category}</Text>
-            </View>
-            <ChevronRight size={20} color="#ccc" />
-          </TouchableOpacity>
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(index * 100).duration(600).springify()}>
+            <TouchableOpacity 
+              style={styles.card} 
+              onPress={() => router.push(`/product/${item.id}`)}
+              activeOpacity={0.7}
+            >
+              <Image source={{ uri: item.thumbnail_url }} style={styles.thumbnail} />
+              <View style={styles.content}>
+                <Text style={styles.title} numberOfLines={1}>{item.product_name}</Text>
+                <View style={styles.metaInfo}>
+                  <Text style={styles.category}>{item.category}</Text>
+                  {item.viewedAt && (
+                    <View style={styles.timestampContainer}>
+                       <Clock size={10} color="#999" />
+                       <Text style={styles.timestampText}>
+                         {new Date(item.viewedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                       </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <ChevronRight size={20} color="#ccc" />
+            </TouchableOpacity>
+          </Animated.View>
         )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainerInline}>
+            <History size={60} color="#ccc" />
+            <Text style={styles.emptyText}>No history for this period.</Text>
+            {recentProducts.length > 0 && (
+               <TouchableOpacity 
+                 style={styles.clearButton} 
+                 onPress={handleClearHistory}
+               >
+                 <Trash2 size={16} color="#FF3B30" />
+                 <Text style={styles.clearText}>Clear All History</Text>
+               </TouchableOpacity>
+            )}
+          </View>
+        }
       />
     </View>
   );
@@ -55,13 +126,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 0, // Header text is removed, we'll use consistent padding
   },
-  header: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#333',
-    marginBottom: 20,
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 20,
+    gap: 10,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  activeFilter: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  filterText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#666',
+  },
+  activeText: {
+    color: '#fff',
   },
   emptyContainer: {
     flex: 1,
@@ -69,25 +163,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
+  emptyContainerInline: {
+    marginTop: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   emptyText: {
     marginTop: 15,
     fontSize: 16,
     color: '#999',
+    textAlign: 'center',
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    padding: 10,
+  },
+  clearText: {
+    marginLeft: 8,
+    color: '#FF3B30',
+    fontWeight: '700',
+    fontSize: 14,
   },
   card: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 12,
-    marginBottom: 15,
+    borderRadius: 20,
+    padding: 14,
+    marginBottom: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#F0F0F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   thumbnail: {
-    width: 50,
-    height: 70,
-    borderRadius: 8,
+    width: 60,
+    height: 85,
+    borderRadius: 12,
   },
   content: {
     flex: 1,
@@ -95,12 +212,27 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: '800',
+    color: '#1A1A1A',
+  },
+  metaInfo: {
+    marginTop: 6,
   },
   category: {
     fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  timestampContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
+  },
+  timestampText: {
+    fontSize: 10,
     color: '#999',
-    marginTop: 2,
+    fontWeight: '600',
   },
 });

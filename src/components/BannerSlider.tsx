@@ -17,19 +17,25 @@ const BannerSlider: React.FC<Props> = ({ banners }) => {
       <Carousel
         loop
         width={width}
-        height={200}
+        height={210}
         autoPlay={true}
+        autoPlayInterval={3000}
         data={banners}
         scrollAnimationDuration={1000}
+        mode="parallax"
+        modeConfig={{
+          parallaxScrollingScale: 0.9,
+          parallaxScrollingOffset: 50,
+        }}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.slide} activeOpacity={0.9}>
+          <TouchableOpacity style={styles.slide} activeOpacity={0.9} onPress={() => {}}>
             <Image 
               source={{ uri: item.image_url }} 
               style={styles.image} 
               resizeMode="cover"
             />
             <View style={styles.overlay}>
-              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -42,6 +48,7 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
     backgroundColor: '#fff',
+    height: 220,
   },
   slide: {
     width: width,
@@ -50,23 +57,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
-    width: width - 30,
-    height: 180,
-    borderRadius: 15,
+    width: width - 48,
+    height: 190,
+    borderRadius: 24,
   },
   overlay: {
     position: 'absolute',
-    bottom: 20,
-    left: 25,
-    right: 25,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    padding: 10,
-    borderRadius: 8,
+    bottom: 25,
+    left: 40,
+    right: 40,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 14,
   },
   title: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
 });
 

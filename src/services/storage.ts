@@ -10,7 +10,7 @@ export const saveRecentlyViewed = async (product: any) => {
     const existing = await AsyncStorage.getItem(RECENTLY_VIEWED_KEY);
     const products = existing ? JSON.parse(existing) : [];
     const filtered = products.filter((p: any) => p.id !== product.id);
-    const updated = [product, ...filtered].slice(0, 20); // Keep last 20
+    const updated = [{ ...product, viewedAt: new Date().toISOString() }, ...filtered].slice(0, 50); // Increased limit to 50
     await AsyncStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(updated));
   } catch (error) {
     console.error('Error saving recently viewed:', error);
@@ -24,6 +24,14 @@ export const getRecentlyViewed = async () => {
   } catch (error) {
     console.error('Error fetching recently viewed:', error);
     return [];
+  }
+};
+
+export const clearRecentlyViewed = async () => {
+  try {
+    await AsyncStorage.removeItem(RECENTLY_VIEWED_KEY);
+  } catch (error) {
+    console.error('Error clearing recently viewed:', error);
   }
 };
 

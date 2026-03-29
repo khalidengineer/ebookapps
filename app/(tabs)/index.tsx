@@ -8,6 +8,7 @@ import ProductCard from '../../src/components/ProductCard';
 import CategoryFolder from '../../src/components/CategoryFolder';
 import { FlashList } from '@shopify/flash-list';
 import { TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -97,128 +98,141 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <View style={styles.searchBarContainer}>
-          <Search size={18} color="#999" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search ebooks..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        <BannerSlider banners={banners} />
-
-
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Featured Products</Text>
-        </View>
         
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={featuredProducts}
-          renderItem={({ item }) => (
-            <ProductCard product={item} variant="featured" />
-          )}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={{ paddingHorizontal: 24 }}
-        />
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Browse Categories</Text>
-        </View>
-
-        <View style={styles.categoryNavigator}>
-          {selectedCategory !== 'All' && (
-            <View style={styles.breadcrumbContainer}>
-              <TouchableOpacity 
-                style={styles.backButton} 
-                onPress={() => {
-                  if (selectedChildCategory) setSelectedChildCategory(null);
-                  else if (selectedSubcategory) setSelectedSubcategory(null);
-                  else setSelectedCategory('All');
-                }}
-              >
-                <ArrowLeft size={20} color="#007AFF" />
-                <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.breadcrumbScroll}>
-                <Text style={styles.breadcrumbText}>
-                  {selectedCategory}
-                  {selectedSubcategory && ` › ${selectedSubcategory}`}
-                  {selectedChildCategory && ` › ${selectedChildCategory}`}
-                </Text>
-              </ScrollView>
-            </View>
-          )}
-
-          <View style={styles.folderContainer}>
-            {selectedCategory === 'All' ? (
-              currentCategories.map(cat => (
-                <CategoryFolder 
-                  key={cat} 
-                  title={cat} 
-                  onPress={() => setSelectedCategory(cat)} 
-                  count={products.filter(p => p.category === cat).length}
-                />
-              ))
-            ) : !selectedSubcategory ? (
-              currentSubcategories.length > 0 ? (
-                currentSubcategories.map(sub => (
-                  <CategoryFolder 
-                    key={sub} 
-                    title={sub} 
-                    color="#FF9500" 
-                    onPress={() => setSelectedSubcategory(sub)}
-                    count={products.filter(p => p.subcategory === sub).length}
-                  />
-                ))
-              ) : (
-                <Text style={styles.emptyText}>No subcategories found</Text>
-              )
-            ) : !selectedChildCategory ? (
-              currentChildCategories.length > 0 ? (
-                currentChildCategories.map(child => (
-                  <CategoryFolder 
-                    key={child} 
-                    title={child} 
-                    color="#34C759" 
-                    onPress={() => setSelectedChildCategory(child)}
-                    count={products.filter(p => p.child_category === child).length}
-                  />
-                ))
-              ) : (
-                <Text style={styles.emptyText}>No child categories found</Text>
-              )
-            ) : null}
+        <Animated.View entering={FadeInDown.delay(200).duration(800).springify()}>
+          <View style={styles.searchBarContainer}>
+            <Search size={18} color="#007AFF" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search your next ebook..."
+              placeholderTextColor="#999"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={styles.sectionHeader}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={styles.sectionTitle}>
-              {selectedChildCategory || selectedSubcategory || (selectedCategory === 'All' ? 'All Ebooks' : selectedCategory)}
-            </Text>
-            {selectedCategory !== 'All' && (
-              <TouchableOpacity onPress={handleReset}>
-                <Text style={{ color: '#007AFF', fontWeight: '600' }}>Reset</Text>
-              </TouchableOpacity>
+        <Animated.View entering={FadeInDown.delay(400).duration(800).springify()}>
+          <BannerSlider banners={banners} />
+        </Animated.View>
+
+
+
+        <Animated.View entering={FadeInDown.delay(600).duration(800).springify()}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Featured Products</Text>
+          </View>
+          
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={featuredProducts}
+            renderItem={({ item }) => (
+              <ProductCard product={item} variant="featured" />
             )}
-          </View>
-        </View>
-
-        <View style={styles.gridContainer}>
-          <FlashList
-            data={filteredProducts}
-            numColumns={2}
-            renderItem={({ item }) => <ProductCard product={item} variant="grid" />}
             keyExtractor={item => item.id.toString()}
-            estimatedItemSize={200}
-            scrollEnabled={false}
+            contentContainerStyle={{ paddingHorizontal: 24 }}
           />
-        </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(800).duration(800).springify()}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Browse Categories</Text>
+          </View>
+
+          <View style={styles.categoryNavigator}>
+            {selectedCategory !== 'All' && (
+              <View style={styles.breadcrumbContainer}>
+                <TouchableOpacity 
+                  style={styles.backButton} 
+                  onPress={() => {
+                    if (selectedChildCategory) setSelectedChildCategory(null);
+                    else if (selectedSubcategory) setSelectedSubcategory(null);
+                    else setSelectedCategory('All');
+                  }}
+                >
+                  <ArrowLeft size={20} color="#007AFF" />
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.breadcrumbScroll}>
+                  <Text style={styles.breadcrumbText}>
+                    {selectedCategory}
+                    {selectedSubcategory && ` › ${selectedSubcategory}`}
+                    {selectedChildCategory && ` › ${selectedChildCategory}`}
+                  </Text>
+                </ScrollView>
+              </View>
+            )}
+
+            <View style={styles.folderContainer}>
+              {selectedCategory === 'All' ? (
+                currentCategories.map(cat => (
+                  <CategoryFolder 
+                    key={cat} 
+                    title={cat} 
+                    onPress={() => setSelectedCategory(cat)} 
+                    count={products.filter(p => p.category === cat).length}
+                  />
+                ))
+              ) : !selectedSubcategory ? (
+                currentSubcategories.length > 0 ? (
+                  currentSubcategories.map(sub => (
+                    <CategoryFolder 
+                      key={sub} 
+                      title={sub} 
+                      color="#FF9500" 
+                      onPress={() => setSelectedSubcategory(sub)}
+                      count={products.filter(p => p.subcategory === sub).length}
+                    />
+                  ))
+                ) : (
+                  <Text style={styles.emptyText}>No subcategories found</Text>
+                )
+              ) : !selectedChildCategory ? (
+                currentChildCategories.length > 0 ? (
+                  currentChildCategories.map(child => (
+                    <CategoryFolder 
+                      key={child} 
+                      title={child} 
+                      color="#34C759" 
+                      onPress={() => setSelectedChildCategory(child)}
+                      count={products.filter(p => p.child_category === child).length}
+                    />
+                  ))
+                ) : (
+                  <Text style={styles.emptyText}>No child categories found</Text>
+                )
+              ) : null}
+            </View>
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(1000).duration(800).springify()}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.sectionTitle}>
+                {selectedChildCategory || selectedSubcategory || (selectedCategory === 'All' ? 'Discover All' : selectedCategory)}
+              </Text>
+              {selectedCategory !== 'All' && (
+                <TouchableOpacity onPress={handleReset}>
+                  <Text style={{ color: '#007AFF', fontWeight: '800' }}>Reset All</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.gridContainer}>
+            <FlashList
+              data={filteredProducts}
+              numColumns={2}
+              renderItem={({ item }) => <ProductCard product={item} variant="grid" />}
+              keyExtractor={item => item.id.toString()}
+              estimatedItemSize={200}
+              scrollEnabled={false}
+            />
+          </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -227,7 +241,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
     paddingTop: 24,
   },
   loaderContainer: {
@@ -238,14 +252,19 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F9FB',
     marginHorizontal: 24,
-    marginVertical: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 12,
+    marginVertical: 15,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#F0F0F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,

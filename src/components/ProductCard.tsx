@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Product } from '../services/api';
-import { Star, Bookmark } from 'lucide-react-native';
+import { Star, Bookmark, ShoppingBag } from 'lucide-react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -13,6 +14,19 @@ interface Props {
 
 const ProductCard: React.FC<Props> = ({ product, variant }) => {
   const router = useRouter();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
 
   const handlePress = () => {
     router.push(`/product/${product.id}`);
@@ -20,48 +34,67 @@ const ProductCard: React.FC<Props> = ({ product, variant }) => {
 
   if (variant === 'featured') {
     return (
-      <TouchableOpacity onPress={handlePress} style={styles.featuredCard} activeOpacity={0.8}>
-        <Image style={styles.featuredThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="cover" />
-        <View style={styles.featuredBadge}>
-          <Star color="#FFD700" size={12} fill="#FFD700" />
-          <Text style={styles.badgeText}>Featured</Text>
-        </View>
-        <View style={styles.featuredContent}>
-          <Text style={styles.featuredTitle} numberOfLines={1}>{product.product_name}</Text>
-          <Text style={styles.featuredPrice}>${product.price}</Text>
-        </View>
-      </TouchableOpacity>
+      <Animated.View style={[styles.featuredCard, animatedStyle]}>
+        <TouchableOpacity 
+          onPress={handlePress} 
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+        >
+          <Image style={styles.featuredThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="cover" />
+          <View style={styles.featuredBadge}>
+            <Star color="#FFD700" size={12} fill="#FFD700" />
+            <Text style={styles.badgeText}>Premium</Text>
+          </View>
+          <View style={styles.featuredContent}>
+            <Text style={styles.featuredTitle} numberOfLines={1}>{product.product_name}</Text>
+            <View style={styles.cardInfo}>
+               <Text style={styles.featuredPrice}>${product.price}</Text>
+               <ShoppingBag size={14} color="#007AFF" />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 
   return (
-    <TouchableOpacity onPress={handlePress} style={styles.gridCard} activeOpacity={0.8}>
-      <Image style={styles.gridThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="cover" />
-      <View style={styles.gridContent}>
-        <Text style={styles.gridCategory}>{product.category}</Text>
-        <Text style={styles.gridTitle} numberOfLines={2}>{product.product_name}</Text>
-        <View style={styles.gridFooter}>
-          <Text style={styles.gridPrice}>${product.price}</Text>
-          <Bookmark size={16} color="#999" />
+    <Animated.View style={[styles.gridCard, animatedStyle]}>
+      <TouchableOpacity 
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        <Image style={styles.gridThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="cover" />
+        <View style={styles.gridContent}>
+          <Text style={styles.gridCategory}>{product.category}</Text>
+          <Text style={styles.gridTitle} numberOfLines={2}>{product.product_name}</Text>
+          <View style={styles.gridFooter}>
+            <Text style={styles.gridPrice}>${product.price}</Text>
+            <Bookmark size={16} color="#007AFF" fill="rgba(0, 122, 255, 0.1)" />
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   featuredCard: {
-    width: 200,
+    width: 180,
     marginRight: 15,
-    borderRadius: 15,
+    borderRadius: 20,
     backgroundColor: '#fff',
-    elevation: 3,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
     overflow: 'hidden',
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   featuredThumbnail: {
     width: '100%',
@@ -73,62 +106,73 @@ const styles = StyleSheet.create({
     left: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 10,
+    zIndex: 1,
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: '800',
+    color: '#007AFF',
     marginLeft: 4,
+    textTransform: 'uppercase',
   },
   featuredContent: {
-    padding: 10,
+    padding: 12,
   },
   featuredTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#333',
+    color: '#1A1A1A',
+  },
+  cardInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
   },
   featuredPrice: {
     fontSize: 14,
     color: '#007AFF',
-    fontWeight: '600',
-    marginTop: 4,
+    fontWeight: '800',
   },
   gridCard: {
     flex: 1,
     margin: 8,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    elevation: 2,
+    borderRadius: 20,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   gridThumbnail: {
     width: '100%',
-    height: 150,
+    height: 160,
   },
   gridContent: {
     padding: 12,
   },
   gridCategory: {
     fontSize: 10,
-    color: '#999',
+    color: '#007AFF',
     textTransform: 'uppercase',
-    fontWeight: '600',
+    fontWeight: '800',
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   gridTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    height: 36,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    height: 38,
+    lineHeight: 18,
   },
   gridFooter: {
     flexDirection: 'row',
@@ -138,8 +182,8 @@ const styles = StyleSheet.create({
   },
   gridPrice: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#007AFF',
+    fontWeight: '800',
+    color: '#1A1A1A',
   },
 });
 
