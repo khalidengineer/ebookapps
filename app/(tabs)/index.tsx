@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   sectionHeader: {
-    marginTop: 20,
+    marginTop: 5,
     marginBottom: 10,
     paddingHorizontal: 24,
   },

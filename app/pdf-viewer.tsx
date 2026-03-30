@@ -89,17 +89,43 @@ export default function PdfViewerScreen() {
       document.getElementsByTagName('head')[0].appendChild(meta);
 
       const style = document.createElement('style');
-      style.innerHTML = ' * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent !important; } html, body { width: 100vw !important; min-height: 100vh !important; background-color: #1a1a1a !important; overflow-x: hidden !important; overflow-y: scroll !important; scroll-snap-type: y mandatory !important; scroll-behavior: smooth !important; -webkit-overflow-scrolling: touch !important; margin: 0 !important; padding: 0 !important; } .ndf-view-container, .ndf-view-container-offset, div[role="page"], .page-container, .pdf-viewer-page { scroll-snap-align: start !important; scroll-snap-stop: always !important; width: 100vw !important; min-height: 100vh !important; display: flex !important; justify-content: center !important; align-items: center !important; background-color: #1a1a1a !important; border: none !important; margin: 0 !important; padding: 0 !important; position: relative !important; } img, canvas, .ndf-view-container-canvas { width: 100vw !important; height: auto !important; max-width: 100vw !important; object-fit: contain !important; display: block !important; margin: 0 !important; padding: 0 !important; } .ndf-footer-container, .ndf-header-container, .ndf-buttons-container, div[role="toolbar"], .ndf-title-container, .doc-info, .ndf-action-bar, .ndf-navigation-bar { display: none !important; height: 0 !important; visibility: hidden !important; } ';
+      style.innerHTML = ' * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent !important; } html, body { width: 100vw !important; height: 100vh !important; background-color: #1a1a1a !important; overflow-x: hidden !important; overflow-y: scroll !important; scroll-snap-type: y mandatory !important; scroll-behavior: smooth !important; -webkit-overflow-scrolling: touch !important; margin: 0 !important; padding: 0 !important; } .ndf-view-container, .ndf-view-container-offset, div[role="page"], .page-container, .pdf-viewer-page { scroll-snap-align: start !important; scroll-snap-stop: always !important; width: 100vw !important; height: 100vh !important; min-height: 100vh !important; display: flex !important; justify-content: center !important; align-items: center !important; background-color: #1a1a1a !important; border: none !important; margin: 0 !important; padding: 0 !important; position: relative !important; overflow: hidden !important; } img, canvas, .ndf-view-container-canvas { max-width: 100vw !important; max-height: 100vh !important; width: auto !important; height: auto !important; object-fit: contain !important; display: block !important; margin: auto !important; padding: 0 !important; } .ndf-footer-container, .ndf-header-container, .ndf-buttons-container, div[role="toolbar"], .ndf-title-container, .doc-info, .ndf-action-bar, .ndf-navigation-bar, .ndf-scroll-shimmer, .ndf-shimmer, .goog-inline-block, .ndf-paged-viewer-footer, .ndf-paged-viewer-header, .ndf-view-container-paged-viewer-navigation-bar, .ndf-view-container-paged-viewer-footer { display: none !important; height: 0 !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important; left: -9999px !important; } ';
       document.head.appendChild(style);
       
+      const selectorsToHide = [
+        'div[role="toolbar"]', 
+        '.ndf-footer-container', 
+        '.ndf-header-container', 
+        '.ndf-action-bar', 
+        '.ndf-navigation-bar',
+        '.ndf-buttons-container',
+        '.goog-inline-block',
+        '.ndf-shimmer',
+        '.ndf-scroll-shimmer',
+        '.ndf-paged-viewer-footer',
+        '.ndf-paged-viewer-header'
+      ];
+
       const cleanup = () => {
-        ['div[role="toolbar"]', '.ndf-footer-container', '.ndf-header-container', '.ndf-action-bar'].forEach(selector => {
+        selectorsToHide.forEach(selector => {
           const els = document.querySelectorAll(selector);
-          els.forEach(el => { if (el.style.display !== "none") el.style.display = "none"; });
+          els.forEach(el => {
+            if (el.style.display !== "none") {
+              el.style.display = "none";
+              el.style.visibility = "hidden";
+              el.style.height = "0";
+            }
+          });
         });
         document.body.style.width = "100vw";
       };
-      setInterval(cleanup, 1000);
+
+      // Persistent Cleanup with MutationObserver
+      const observer = new MutationObserver(cleanup);
+      observer.observe(document.body, { childList: true, subtree: true });
+      
+      // Also run on interval for extra safety
+      setInterval(cleanup, 500);
       cleanup();
 
       document.addEventListener("click", function() {

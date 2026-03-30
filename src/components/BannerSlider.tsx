@@ -17,7 +17,7 @@ const BannerSlider: React.FC<Props> = ({ banners }) => {
       <Carousel
         loop
         width={width}
-        height={210}
+        height={220}
         autoPlay={true}
         autoPlayInterval={3000}
         data={banners}
@@ -46,19 +46,20 @@ const BannerSlider: React.FC<Props> = ({ banners }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginTop: 5,
+    marginBottom: 0,
     backgroundColor: '#fff',
-    height: 220,
+    height: 230,
   },
   slide: {
     width: width,
-    height: 200,
+    height: 210,
     justifyContent: 'center',
     alignItems: 'center',
   },
   image: {
-    width: width - 48,
-    height: 190,
+    width: width - 24,
+    height: 200,
     borderRadius: 24,
   },
   overlay: {
