@@ -37,20 +37,24 @@ const ProductCard: React.FC<Props> = ({ product, variant }) => {
       <Animated.View style={[styles.featuredCard, animatedStyle]}>
         <TouchableOpacity 
           onPress={handlePress} 
-          onPressIn={handlePressIn}
+          onPressIn={handlePressIn} 
           onPressOut={handlePressOut}
           activeOpacity={1}
         >
-          <Image style={styles.featuredThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="cover" />
-          <View style={styles.featuredBadge}>
-            <Star color="#FFD700" size={12} fill="#FFD700" />
-            <Text style={styles.badgeText}>Premium</Text>
-          </View>
-          <View style={styles.featuredContent}>
-            <Text style={styles.featuredTitle} numberOfLines={1}>{product.product_name}</Text>
-            <View style={styles.cardInfo}>
-               <Text style={styles.featuredPrice}>${product.price}</Text>
-               <ShoppingBag size={14} color="#007AFF" />
+          <View style={styles.featuredInner}>
+            <View style={styles.featuredImageContainer}>
+              <Image style={styles.featuredThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="contain" />
+              <View style={styles.featuredBadge}>
+                <Star color="#FFD700" size={12} fill="#FFD700" />
+                <Text style={styles.badgeText}>Premium</Text>
+              </View>
+            </View>
+            <View style={styles.featuredContent}>
+              <Text style={styles.featuredTitle} numberOfLines={1}>{product.product_name}</Text>
+              <View style={styles.cardInfo}>
+                 <Text style={styles.featuredPrice}>${product.price}</Text>
+                 <ShoppingBag size={14} color="#007AFF" />
+              </View>
             </View>
           </View>
         </TouchableOpacity>
@@ -66,7 +70,9 @@ const ProductCard: React.FC<Props> = ({ product, variant }) => {
         onPressOut={handlePressOut}
         activeOpacity={1}
       >
-        <Image style={styles.gridThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="cover" />
+        <View style={styles.gridImageContainer}>
+          <Image style={styles.gridThumbnail} source={{ uri: product.thumbnail_url }} resizeMode="contain" />
+        </View>
         <View style={styles.gridContent}>
           <Text style={styles.gridCategory}>{product.category}</Text>
           <Text style={styles.gridTitle} numberOfLines={2}>{product.product_name}</Text>
@@ -82,7 +88,7 @@ const ProductCard: React.FC<Props> = ({ product, variant }) => {
 
 const styles = StyleSheet.create({
   featuredCard: {
-    width: 180,
+    width: width - 80,
     marginRight: 15,
     borderRadius: 20,
     backgroundColor: '#fff',
@@ -96,9 +102,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F0F0F0',
   },
-  featuredThumbnail: {
+  featuredInner: {
+    flexDirection: 'column',
+  },
+  featuredImageContainer: {
     width: '100%',
     height: 120,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
+  },
+  featuredThumbnail: {
+    width: '100%',
+    height: '100%',
   },
   featuredBadge: {
     position: 'absolute',
@@ -120,7 +137,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   featuredContent: {
+    flex: 1,
     padding: 12,
+    justifyContent: 'center',
   },
   featuredTitle: {
     fontSize: 14,
@@ -140,31 +159,42 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     flex: 1,
-    margin: 8,
+    margin: 5,
     backgroundColor: '#fff',
-    borderRadius: 20,
-    elevation: 4,
+    borderRadius: 10,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 4,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#F0F0F0',
   },
+  gridImageContainer: {
+    width: '100%',
+    height: 95,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
+  },
   gridThumbnail: {
     width: '100%',
-    height: 160,
+    borderRadius:10,
+    height: '100%',
   },
   gridContent: {
-    padding: 12,
+    flex: 1,
+    padding: 8,
+    justifyContent: 'center',
   },
   gridCategory: {
-    fontSize: 10,
+    fontSize: 8,
     color: '#007AFF',
     textTransform: 'uppercase',
     fontWeight: '800',
-    marginBottom: 4,
+    marginBottom: 2,
     letterSpacing: 0.5,
   },
   gridTitle: {
@@ -181,7 +211,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   gridPrice: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: '#1A1A1A',
   },

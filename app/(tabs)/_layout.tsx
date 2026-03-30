@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, LayoutGrid, History, HardDriveDownload, Settings } from 'lucide-react-native';
+import { Home, LayoutGrid, History, HardDriveDownload, Settings, Brain } from 'lucide-react-native';
 import { useColorScheme } from 'react-native';
 
 export default function TabLayout() {
@@ -36,6 +36,13 @@ export default function TabLayout() {
         options={{
           title: 'Recent',
           tabBarIcon: ({ color }) => <History color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="quiz"
+        options={{
+          title: 'Quiz',
+          tabBarIcon: ({ color }) => <Brain color={color} size={24} />,
         }}
       />
       <Tabs.Screen

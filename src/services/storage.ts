@@ -4,6 +4,8 @@ import * as Sharing from 'expo-sharing';
 
 const RECENTLY_VIEWED_KEY = 'RECENTLY_VIEWED_PRODUCTS';
 const SAVED_PDFS_KEY = 'SAVED_PDFS_METADATA';
+const QUIZ_HISTORY_KEY = 'QUIZ_HISTORY_DATA';
+const QUIZ_BOOKMARKS_KEY = 'QUIZ_BOOKMARKS_DATA';
 
 export const saveRecentlyViewed = async (product: any) => {
   try {
@@ -106,5 +108,57 @@ export const setOnboardingCompleted = async () => {
     await AsyncStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
   } catch (error) {
     console.error('Error saving onboarding status:', error);
+  }
+};
+
+export const saveQuizResult = async (result: any) => {
+  try {
+    const existing = await AsyncStorage.getItem(QUIZ_HISTORY_KEY);
+    const history = existing ? JSON.parse(existing) : [];
+    const updated = [{ ...result, id: Date.now(), date: new Date().toISOString() }, ...history].slice(0, 50);
+    await AsyncStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.error('Error saving quiz result:', error);
+  }
+};
+
+export const getQuizHistory = async () => {
+  try {
+    const existing = await AsyncStorage.getItem(QUIZ_HISTORY_KEY);
+    return existing ? JSON.parse(existing) : [];
+  } catch (error) {
+    console.error('Error fetching quiz history:', error);
+    return [];
+  }
+};
+
+export const toggleBookmarkQuestion = async (question: any) => {
+  try {
+    const existing = await AsyncStorage.getItem(QUIZ_BOOKMARKS_KEY);
+    const bookmarks = existing ? JSON.parse(existing) : [];
+    const isBookmarked = bookmarks.find((b: any) => b.quiz_id === question.quiz_id && b.question === question.question);
+    
+    let updated;
+    if (isBookmarked) {
+      updated = bookmarks.filter((b: any) => !(b.quiz_id === question.quiz_id && b.question === question.question));
+    } else {
+      updated = [...bookmarks, { ...question, bookmarkedAt: new Date().toISOString() }];
+    }
+    
+    await AsyncStorage.setItem(QUIZ_BOOKMARKS_KEY, JSON.stringify(updated));
+    return !isBookmarked;
+  } catch (error) {
+    console.error('Error toggling bookmark:', error);
+    return false;
+  }
+};
+
+export const getBookmarkedQuestions = async () => {
+  try {
+    const existing = await AsyncStorage.getItem(QUIZ_BOOKMARKS_KEY);
+    return existing ? JSON.parse(existing) : [];
+  } catch (error) {
+    console.error('Error fetching bookmarked questions:', error);
+    return [];
   }
 };

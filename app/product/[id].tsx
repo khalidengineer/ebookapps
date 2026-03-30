@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert, Modal, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { ChevronLeft, Download, Eye, Share2, Bookmark, CheckCircle2 } from 'lucide-react-native';
-import { fetchProducts, Product } from '../../src/services/api';
+import { ChevronLeft, Download, Eye, Share2, Bookmark, CheckCircle2, Brain, ChevronRight } from 'lucide-react-native';
+import { fetchProducts, Product, fetchQuizzes } from '../../src/services/api';
 import { saveRecentlyViewed, downloadPDF, savePDFMetadata, getSavedPDFs } from '../../src/services/storage';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -11,6 +12,8 @@ export default function ProductDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [relatedQuizzes, setRelatedQuizzes] = useState<any[]>([]);
+  const [showQuizModal, setShowQuizModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,8 +23,28 @@ export default function ProductDetailScreen() {
       if (found) {
         setProduct(found);
         saveRecentlyViewed(found);
-        const saved = await getSavedPDFs();
-        setIsSaved(saved.some((p: any) => p.id === found.id));
+        // Find all matching quizzes
+        const allQuizzes = await fetchQuizzes();
+        const matches = allQuizzes.filter(q => 
+          q.book_id?.toString() === found.id.toString() || 
+          q.quiz_id.toString() === found.id.toString()
+        );
+        
+        // Group by unique quiz_id
+        const uniqueGroups = Object.values(matches.reduce((acc: any, curr) => {
+          if (!acc[curr.quiz_id]) {
+            acc[curr.quiz_id] = {
+              id: curr.quiz_id,
+              title: curr.subcategory || `${curr.category} Quiz`,
+              questions: 0,
+              difficulty: curr.difficulty,
+            };
+          }
+          acc[curr.quiz_id].questions++;
+          return acc;
+        }, {}));
+        
+        setRelatedQuizzes(uniqueGroups);
       }
       setLoading(false);
     };
@@ -120,9 +143,28 @@ export default function ProductDetailScreen() {
           style={[styles.actionButton, styles.previewButton]} 
           onPress={handlePreview}
         >
-          <Eye color="#333" size={20} style={{ marginRight: 8 }} />
-          <Text style={styles.previewButtonText}>Preview</Text>
+          <Eye color="#333" size={20} />
+          <Text style={styles.actionButtonText}>Preview</Text>
         </TouchableOpacity>
+
+        {relatedQuizzes.length > 0 && (
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.quizFooterButton]} 
+            onPress={() => {
+              if (relatedQuizzes.length === 1) {
+                router.push({
+                   pathname: '/quiz/start/[id]',
+                   params: { id: relatedQuizzes[0].id }
+                });
+              } else {
+                setShowQuizModal(true);
+              }
+            }}
+          >
+            <Brain color="#fff" size={20} />
+            <Text style={[styles.actionButtonText, { color: '#fff' }]}>Quiz</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity 
           style={[styles.actionButton, styles.downloadButton, (isSaved || downloading) && styles.disabledButton]} 
@@ -133,17 +175,75 @@ export default function ProductDetailScreen() {
             <ActivityIndicator color="#fff" size="small" />
           ) : isSaved ? (
             <>
-              <CheckCircle2 color="#fff" size={20} style={{ marginRight: 8 }} />
-              <Text style={styles.downloadButtonText}>Saved Offline</Text>
+              <CheckCircle2 color="#fff" size={20} />
+              <Text style={[styles.actionButtonText, { color: '#fff' }]}>Saved</Text>
             </>
           ) : (
             <>
-              <Download color="#fff" size={20} style={{ marginRight: 8 }} />
-              <Text style={styles.downloadButtonText}>Download</Text>
+              <Download color="#fff" size={20} />
+              <Text style={[styles.actionButtonText, { color: '#fff' }]}>Save</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Multi-Quiz Selection Modal */}
+      <Modal
+        visible={showQuizModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowQuizModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalDismiss} 
+            onPress={() => setShowQuizModal(false)} 
+          />
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose a Quiz</Text>
+              <TouchableOpacity onPress={() => setShowQuizModal(false)}>
+                <Text style={styles.closeModalText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={relatedQuizzes}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.modalList}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.quizListItem}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setShowQuizModal(false);
+                    setTimeout(() => {
+                      router.push({
+                        pathname: '/quiz/start/[id]',
+                        params: { id: item.id }
+                      });
+                    }, 100);
+                  }}
+                >
+                   <View style={styles.quizListIcon}>
+                     <Brain size={22} color="#007AFF" />
+                   </View>
+                   <View style={{ flex: 1 }}>
+                     <Text style={styles.quizListTitle} numberOfLines={1}>{item.title}</Text>
+                     <View style={styles.quizListMetaRow}>
+                        <Text style={styles.quizListMeta}>{item.questions} Questions</Text>
+                        <View style={styles.dot} />
+                        <Text style={[styles.quizListMeta, { color: '#007AFF' }]}>{item.difficulty}</Text>
+                     </View>
+                   </View>
+                   <View style={styles.startBadge}>
+                      <Text style={styles.startBadgeText}>START</Text>
+                   </View>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -267,5 +367,109 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#ccc',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalDismiss: {
+    flex: 1,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingTop: 20,
+    maxHeight: '60%',
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1A1A1A',
+  },
+  closeModalText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#666',
+  },
+  modalList: {
+    padding: 24,
+  },
+  quizListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    padding: 15,
+    borderRadius: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  quizListIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  quizListTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  quizListMeta: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: '600',
+  },
+  quizListMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#ccc',
+  },
+  startBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  startBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#007AFF',
+  },
+  quizFooterButton: {
+    backgroundColor: '#FF9500', // Distinct orange for Quiz
+  },
+  actionButtonText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#333',
+    marginLeft: 6,
   },
 });

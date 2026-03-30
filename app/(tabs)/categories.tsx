@@ -122,7 +122,7 @@ export default function CategoriesScreen() {
                 numColumns={2}
                 renderItem={({ item }) => <ProductCard product={item} variant="grid" />}
                 keyExtractor={item => item.id.toString()}
-                estimatedItemSize={200}
+                estimatedItemSize={100}
                 scrollEnabled={false}
               />
             </View>

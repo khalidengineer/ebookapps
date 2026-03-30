@@ -30,6 +30,27 @@ export interface Banner {
   target_value: string;
   status: string;
 }
+  
+export interface QuizItem {
+  quiz_id: number;
+  category: string;
+  subcategory: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: 'a' | 'b' | 'c' | 'd';
+  explanation: string;
+  timer: number;
+  points: number;
+  negative_marks: number;
+  image_url: string;
+  status: string;
+  is_daily?: boolean;
+  book_id?: number; 
+}
 
 export interface Config {
   [key: string]: string;
@@ -81,6 +102,37 @@ export const fetchBanners = async (): Promise<Banner[]> => {
       }));
   } catch (error) {
     console.error('Error fetching banners:', error);
+    return [];
+  }
+};
+
+export const fetchQuizzes = async (): Promise<QuizItem[]> => {
+  try {
+    const response = await axios.get(`${BASE_URL}&sheet=QUIZ`);
+    const data = parseGSheetJSON(response.data);
+    return data
+      .filter((q: any) => q.status === 'active')
+      .map((q: any) => ({
+        quiz_id: q.quiz_id,
+        category: q.category,
+        subcategory: q.subcategory,
+        difficulty: q.difficulty,
+        question: q.question,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        option_c: q.option_c,
+        option_d: q.option_d,
+        correct_answer: q.correct_answer?.toLowerCase(),
+        explanation: q.explanation,
+        timer: q.timer || 30,
+        points: q.points || 1,
+        negative_marks: q.negative_marks || 0,
+        image_url: q.image_url,
+        status: q.status,
+        is_daily: q.category?.toLowerCase().includes('daily') || q.is_daily === true,
+      }));
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
     return [];
   }
 };
