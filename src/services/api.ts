@@ -52,6 +52,14 @@ export interface QuizItem {
   book_id?: number; 
 }
 
+export interface PastPaper {
+  id: number;
+  book_id: number;
+  title: string;
+  pdf_url: string;
+  status: string;
+}
+
 export interface Config {
   [key: string]: string;
 }
@@ -133,6 +141,25 @@ export const fetchQuizzes = async (): Promise<QuizItem[]> => {
       }));
   } catch (error) {
     console.error('Error fetching quizzes:', error);
+    return [];
+  }
+};
+
+export const fetchPastPapers = async (): Promise<PastPaper[]> => {
+  try {
+    const response = await axios.get(`${BASE_URL}&sheet=PAST_PAPERS`);
+    const data = parseGSheetJSON(response.data);
+    return data
+      .filter((p: any) => p.status === 'active')
+      .map((p: any) => ({
+        id: p.id,
+        book_id: p.book_id,
+        title: p.title,
+        pdf_url: p.pdf_link || p.pdf_url,
+        status: p.status,
+      }));
+  } catch (error) {
+    console.error('Error fetching past papers:', error);
     return [];
   }
 };

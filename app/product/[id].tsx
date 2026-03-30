@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert, Modal, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { ChevronLeft, Download, Eye, Share2, Bookmark, CheckCircle2, Brain, ChevronRight } from 'lucide-react-native';
-import { fetchProducts, Product, fetchQuizzes } from '../../src/services/api';
+import { ChevronLeft, Download, Eye, Share2, Bookmark, CheckCircle2, Brain, ChevronRight, FileText } from 'lucide-react-native';
+import { fetchProducts, Product, fetchQuizzes, fetchPastPapers, PastPaper } from '../../src/services/api';
 import { saveRecentlyViewed, downloadPDF, savePDFMetadata, getSavedPDFs } from '../../src/services/storage';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
@@ -13,7 +13,9 @@ export default function ProductDetailScreen() {
   const [downloading, setDownloading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [relatedQuizzes, setRelatedQuizzes] = useState<any[]>([]);
+  const [pastPapers, setPastPapers] = useState<PastPaper[]>([]);
   const [showQuizModal, setShowQuizModal] = useState(false);
+  const [showPapersModal, setShowPapersModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,6 +47,11 @@ export default function ProductDetailScreen() {
         }, {}));
         
         setRelatedQuizzes(uniqueGroups);
+        
+        // Find matching past papers
+        const allPapers = await fetchPastPapers();
+        const relatedPapers = allPapers.filter(p => p.book_id.toString() === found.id.toString());
+        setPastPapers(relatedPapers);
       }
       setLoading(false);
     };
@@ -138,18 +145,37 @@ export default function ProductDetailScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={styles.footerGrid}>
         <TouchableOpacity 
-          style={[styles.actionButton, styles.previewButton]} 
+          style={[styles.gridButton, styles.previewButton]} 
           onPress={handlePreview}
         >
           <Eye color="#333" size={20} />
-          <Text style={styles.actionButtonText}>Preview</Text>
+          <Text style={styles.gridButtonText}>Read</Text>
         </TouchableOpacity>
 
-        {relatedQuizzes.length > 0 && (
+        <TouchableOpacity 
+          style={[styles.gridButton, styles.papersButton]} 
+          onPress={() => {
+            if (pastPapers.length === 1) {
+              router.push({
+                pathname: '/pdf-viewer',
+                params: { url: pastPapers[0].pdf_url, title: pastPapers[0].title }
+              });
+            } else if (pastPapers.length > 1) {
+              setShowPapersModal(true);
+            } else {
+              Alert.alert("Coming Soon", "Past papers for this book will be added soon!");
+            }
+          }}
+        >
+          <FileText color="#fff" size={20} />
+          <Text style={[styles.gridButtonText, { color: '#fff' }]}>Past Papers</Text>
+        </TouchableOpacity>
+
+        {relatedQuizzes.length > 0 ? (
           <TouchableOpacity 
-            style={[styles.actionButton, styles.quizFooterButton]} 
+            style={[styles.gridButton, styles.quizFooterButton]} 
             onPress={() => {
               if (relatedQuizzes.length === 1) {
                 router.push({
@@ -162,12 +188,17 @@ export default function ProductDetailScreen() {
             }}
           >
             <Brain color="#fff" size={20} />
-            <Text style={[styles.actionButtonText, { color: '#fff' }]}>Quiz</Text>
+            <Text style={[styles.gridButtonText, { color: '#fff' }]}>Quiz</Text>
           </TouchableOpacity>
+        ) : (
+          <View style={[styles.gridButton, styles.disabledButton]}>
+             <Brain color="#999" size={20} />
+             <Text style={[styles.gridButtonText, { color: '#999' }]}>No Quiz</Text>
+          </View>
         )}
 
         <TouchableOpacity 
-          style={[styles.actionButton, styles.downloadButton, (isSaved || downloading) && styles.disabledButton]} 
+          style={[styles.gridButton, styles.downloadButton, (isSaved || downloading) && styles.disabledButton]} 
           onPress={handleDownload}
           disabled={isSaved || downloading}
         >
@@ -176,12 +207,12 @@ export default function ProductDetailScreen() {
           ) : isSaved ? (
             <>
               <CheckCircle2 color="#fff" size={20} />
-              <Text style={[styles.actionButtonText, { color: '#fff' }]}>Saved</Text>
+              <Text style={[styles.gridButtonText, { color: '#fff' }]}>Saved</Text>
             </>
           ) : (
             <>
               <Download color="#fff" size={20} />
-              <Text style={[styles.actionButtonText, { color: '#fff' }]}>Save</Text>
+              <Text style={[styles.gridButtonText, { color: '#fff' }]}>Save</Text>
             </>
           )}
         </TouchableOpacity>
@@ -237,6 +268,58 @@ export default function ProductDetailScreen() {
                    </View>
                    <View style={styles.startBadge}>
                       <Text style={styles.startBadgeText}>START</Text>
+                   </View>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Past Papers Selection Modal */}
+      <Modal
+        visible={showPapersModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPapersModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalDismiss} 
+            onPress={() => setShowPapersModal(false)} 
+          />
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Past Papers</Text>
+              <TouchableOpacity onPress={() => setShowPapersModal(false)}>
+                <Text style={styles.closeModalText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={pastPapers}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.modalList}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.quizListItem}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setShowPapersModal(false);
+                    router.push({
+                      pathname: '/pdf-viewer',
+                      params: { url: item.pdf_url, title: item.title }
+                    });
+                  }}
+                >
+                   <View style={[styles.quizListIcon, { backgroundColor: '#F3E5F5' }]}>
+                     <FileText size={22} color="#9C27B0" />
+                   </View>
+                   <View style={{ flex: 1 }}>
+                     <Text style={styles.quizListTitle} numberOfLines={1}>{item.title}</Text>
+                     <Text style={styles.quizListMeta}>PDF Document</Text>
+                   </View>
+                   <View style={[styles.startBadge, { backgroundColor: '#F3E5F5' }]}>
+                      <Text style={[styles.startBadgeText, { color: '#9C27B0' }]}>VIEW</Text>
                    </View>
                 </TouchableOpacity>
               )}
@@ -332,41 +415,45 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#333',
   },
-  footer: {
+  footerGrid: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
+    flexWrap: 'wrap',
+    paddingHorizontal: 20,
     paddingTop: 15,
-    paddingBottom: 35,
+    paddingBottom: 30,
     borderTopWidth: 1,
     borderColor: '#eee',
-    gap: 12,
+    gap: 10,
+    justifyContent: 'space-between',
   },
-  actionButton: {
-    flex: 1,
-    height: 55,
-    borderRadius: 15,
+  gridButton: {
+    width: '48%',
+    height: 52,
+    borderRadius: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  gridButtonText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#333',
+    marginLeft: 6,
+  },
+  papersButton: {
+    backgroundColor: '#9C27B0', // Purple for Past Papers
+  },
   previewButton: {
     backgroundColor: '#f0f0f0',
-  },
-  previewButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
   },
   downloadButton: {
     backgroundColor: '#007AFF',
   },
-  downloadButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
-  },
   disabledButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#f5f5f5',
+  },
+  quizFooterButton: {
+    backgroundColor: '#FF9500', // Distinct orange for Quiz
   },
   modalOverlay: {
     flex: 1,
@@ -462,14 +549,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: '#007AFF',
-  },
-  quizFooterButton: {
-    backgroundColor: '#FF9500', // Distinct orange for Quiz
-  },
-  actionButtonText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#333',
-    marginLeft: 6,
   },
 });
